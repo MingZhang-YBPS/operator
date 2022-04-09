@@ -2,11 +2,11 @@ apiVersion: operators.coreos.com/v1alpha1
 kind: ClusterServiceVersion
 metadata:
   annotations:
-    alm-examples: '[{"apiVersion":"minio.min.io/v2","kind":"Tenant","metadata":{"annotations":{"prometheus.io/path":"/minio/v2/metrics/cluster","prometheus.io/port":"9000","prometheus.io/scrape":"true"},"labels":{"app":"minio"},"name":"storage-lite","namespace":"tenant-lite"},"spec":{"certConfig":{},"configuration":{"name":"storage-configuration"},"credsSecret":{"name":"storage-creds-secret"},"env":[],"externalCaCertSecret":[],"externalCertSecret":[],"image":"quay.io/minio/minio:RELEASE.2022-04-01T03-41-39Z","imagePullSecret":{},"log":{"affinity":{"nodeAffinity":{},"podAffinity":{},"podAntiAffinity":{}},"annotations":{},"audit":{"diskCapacityGB":1},"db":{"affinity":{"nodeAffinity":{},"podAffinity":{},"podAntiAffinity":{}},"annotations":{},"image":"","initimage":"","labels":{},"nodeSelector":{},"resources":{},"securityContext":{"fsGroup":999,"runAsGroup":999,"runAsNonRoot":true,"runAsUser":999},"serviceAccountName":"","tolerations":[],"volumeClaimTemplate":{"metadata":{},"spec":{"accessModes":["ReadWriteOnce"],"resources":{"requests":{"storage":"1Gi"}},"storageClassName":"standard"}}},"image":"","labels":{},"nodeSelector":{},"resources":{},"securityContext":{"fsGroup":1000,"runAsGroup":1000,"runAsNonRoot":true,"runAsUser":1000},"serviceAccountName":"","tolerations":[]},"mountPath":"/export","podManagementPolicy":"Parallel","pools":[{"name":"pool-0","servers":4,"volumeClaimTemplate":{"metadata":{"name":"data"},"spec":{"accessModes":["ReadWriteOnce"],"resources":{"requests":{"storage":"2Gi"}}}},"volumesPerServer":2}],"priorityClassName":"","prometheus":{"affinity":{"nodeAffinity":{},"podAffinity":{},"podAntiAffinity":{}},"annotations":{},"diskCapacityGB":1,"image":"","initimage":"","labels":{},"nodeSelector":{},"resources":{},"securityContext":{"fsGroup":1000,"runAsGroup":1000,"runAsNonRoot":true,"runAsUser":1000},"serviceAccountName":"","sidecarimage":"","storageClassName":"standard"},"requestAutoCert":true,"s3":{"bucketDNS":false},"serviceAccountName":"","serviceMetadata":{"consoleServiceAnnotations":{},"consoleServiceLabels":{},"minioServiceAnnotations":{},"minioServiceLabels":{}},"subPath":"","users":[{"name":"storage-user"}]}}]'
+    alm-examples: '[{"apiVersion":"minio.min.io/v2","kind":"Tenant","metadata":{"name":"storage1","namespace":"minio-tenant-a"},"spec":{"credsSecret":{"name":"minio-tenant-creds-secret"},"image":"image.cestc.cn/ccos-ceake/minio/minio:RELEASE.2022-04-01T03-41-39Z","imagePullSecret":{},"requestAutoCert":false,"pools":[{"servers":1,"name":"pool-0","volumesPerServer":4,"volumeClaimTemplate":{"metadata":{"name":"data"},"spec":{"accessModes":["ReadWriteOnce"],"resources":{"requests":{"storage":"2Gi"}},"storageClassName":"local-storage"}},"securityContext":{"runAsGroup":1000750000,"runAsNonRoot":true,"runAsUser":1000750000}}]}}]'
     capabilities: "Full Lifecycle"
     operators.operatorframework.io/builder: operator-sdk-v1.16.0+git
     operators.operatorframework.io/project_layout: unknown
-    containerImage: quay.io/minio/operator:v4.4.14
+    containerImage: image.cestc.cn/ccos-ceake/minio/operator@sha256:5c7ce3f1840b6e52b68ce58a010e4d9aca32a1b4a439028c42685f41f31262b8
     categories: "AI/Machine Learning, Big Data, Cloud Provider, Storage"
     description: |-
       MinIO is a Kubernetes-native high performance object store with an
@@ -449,7 +449,7 @@ spec:
                     env:
                       - name: CONSOLE_OPERATOR_MODE
                         value: "on"
-                    image: minio/console:v0.15.8
+                    image: image.cestc.cn/ccos-ceake/minio/console@sha256:98b83ef4060d9564eb2755c4fc5802cb058466b627c4cc0bc94242478f0c3dae
                     imagePullPolicy: IfNotPresent
                     name: console
                     ports:
@@ -459,13 +459,15 @@ spec:
                         name: https
                     resources: {}
                     securityContext:
-                      runAsGroup: 1000
+                      # runAsGroup: 1000
                       runAsNonRoot: true
-                      runAsUser: 1000
+                      # runAsUser: 1000
+                      runAsUser: null
+                      runAsGroup: 0
                 serviceAccountName: console-sa
         - name: minio-operator
           spec:
-            replicas: 2
+            replicas: 1
             selector:
               matchLabels:
                 name: minio-operator
@@ -486,7 +488,7 @@ spec:
                                 - minio-operator
                         topologyKey: kubernetes.io/hostname
                 containers:
-                  - image: minio/operator:v4.4.14
+                  - image: image.cestc.cn/ccos-ceake/minio/operator@sha256:5c7ce3f1840b6e52b68ce58a010e4d9aca32a1b4a439028c42685f41f31262b8
                     imagePullPolicy: IfNotPresent
                     name: minio-operator
                     resources:
@@ -495,9 +497,11 @@ spec:
                         ephemeral-storage: 500Mi
                         memory: 256Mi
                     securityContext:
-                      runAsGroup: 1000
+                      # runAsGroup: 1000
                       runAsNonRoot: true
-                      runAsUser: 1000
+                      # runAsUser: 1000
+                      runAsUser: null
+                      runAsGroup: 0
                 serviceAccountName: minio-operator
     strategy: deployment
   installModes:
@@ -535,7 +539,7 @@ spec:
       containerPort: 4222
       conversionCRDs:
         - tenants.minio.min.io
-      deploymentName: operator
+      deploymentName: minio-operator
       generateName: ctenants.kb.io
       sideEffects: None
       targetPort: 0
